@@ -24,6 +24,17 @@ export type Transaksi = {
   createdAt: string;
 };
 
+export type LandingConfig = {
+  logoName: string;
+  logoSlogan: string;
+  heroBadge: string;
+  heroTitle1: string;
+  heroHighlight: string;
+  heroTitle2: string;
+  heroDesc: string;
+  heroImage: string;
+};
+
 export const SEED_OUTLETS: Outlet[] = [
   { id: "o1", nama: "Risol Mayo Pusat - Kemang", alamat: "Jl. Kemang Raya No. 12", kota: "Jakarta Selatan", aktif: true },
   { id: "o2", nama: "Risol Mayo - BSD City", alamat: "AEON Mall BSD, Lt. 2", kota: "Tangerang", aktif: true },
@@ -63,6 +74,17 @@ export const SEED_SALES: Sale[] = [
 ];
 
 export const SEED_TRANSAKSI: Transaksi[] = [];
+
+export const DEFAULT_LANDING: LandingConfig = {
+  logoName: "RISOL MAYONES",
+  logoSlogan: "LUMER • CRISPY • PREMIUM",
+  heroBadge: "BEST SELLER SEJAK 2018",
+  heroTitle1: "Risol Mayones ",
+  heroHighlight: "Lumer",
+  heroTitle2: " yang Bikin Nagih.",
+  heroDesc: "Kami membuat risol dengan kulit tipis crispy, isian premium melimpah, dan racikan mayones house-blend yang lumer. Digoreng dadakan, halal, tanpa pengawet.",
+  heroImage: "https://images.unsplash.com/photo-1604908177453-7462950a6a3b?q=80&w=800",
+};
 
 export function maskWa(wa: string) {
   const clean = wa.replace(/\D/g, "");

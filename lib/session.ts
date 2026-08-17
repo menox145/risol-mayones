@@ -4,7 +4,7 @@ export type SessionUser = {
 };
 
 export const SESSION_COOKIE_NAME = "risol_session";
-export const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
+export const SESSION_MAX_AGE = 60 * 60 * 4; // 4 hours
 
 export function isValidSessionUser(value: unknown): value is SessionUser {
   if (!value || typeof value !== "object") return false;

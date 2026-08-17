@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import AdminDashboard from "@/components/AdminDashboard";
 import KaryawanDashboard from "@/components/KaryawanDashboard";
@@ -290,21 +290,45 @@ export default function App() {
     if(cart.length===0) return;
     setShowCheckout(true);
   };
-  const handleKirimOtp = () => {
-    if(!validateWa(fWa)){
-      alert("No WA tidak valid. Gunakan format 08... atau 62... 10-13 digit");
-      return;
+  const handleKirimOtp = async () => {
+    if (!fWa || !validateWa(fWa)) return alert("Nomor WA tidak valid");
+    try {
+      const res = await fetch("/api/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fWa }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOtpSent(true);
+        setWaVerified(false);
+        alert("Kode OTP berhasil dikirim! Silakan periksa Terminal / Console.");
+      } else {
+        alert(data.message || "Gagal mengirim OTP");
+      }
+    } catch (err) {
+      alert("Terjadi kesalahan sistem saat mengirim OTP");
     }
-    setOtpSent(true);
-    setWaVerified(false);
-    setOtpInput("");
-    alert(`OTP terkirim: 123456 (demo) ke WA ${maskWa(fWa)}`);
   };
-  const handleVerifikasiOtp = () => {
-    if(otpInput.trim() === "123456"){
-      setWaVerified(true);
-    } else {
-      alert("OTP salah. Gunakan 123456 untuk demo");
+
+  const handleVerifikasiOtp = async () => {
+    if (!otpInput) return;
+    try {
+      const res = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fWa, otp: otpInput }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWaVerified(true);
+        setOtpSent(false);
+        setOtpInput("");
+      } else {
+        alert(data.message || "OTP Salah");
+      }
+    } catch (err) {
+      alert("Terjadi kesalahan sistem saat memverifikasi OTP");
     }
   };
   const isFormValid = useMemo(()=>{
@@ -628,7 +652,6 @@ export default function App() {
         <LoginPage 
           onLogin={handleLogin}
           onBackToCustomer={() => setView("customer")}
-          karyawans={karyawans}
         />
       )}
 
@@ -687,7 +710,7 @@ export default function App() {
               </div>
               {otpSent && !waVerified && (
                 <div className="rounded-[20px] bg-white border p-4 space-y-3">
-                  <div className="text-xs font-bold tracking-wide opacity-70">MASUKKAN OTP (demo: 123456)</div>
+                  <div className="text-xs font-bold tracking-wide opacity-70">MASUKKAN OTP (Cek Terminal)</div>
                   <div className="flex gap-2">
                     <input value={otpInput} onChange={e=>setOtpInput(e.target.value)} placeholder="123456" className="flex-1 rounded-full border bg-[#FFF8E8] px-4 py-3 text-sm tracking-[0.3em] font-mono font-bold outline-none focus:ring-2 focus:ring-[#FF6B35]/30"/>
                     <button onClick={handleVerifikasiOtp} className="bg-[#FF6B35] text-white rounded-full px-5 py-3 text-sm font-bold">Verifikasi OTP</button>
