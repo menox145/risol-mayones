@@ -1,0 +1,1 @@
+FIX: pindahkan folder ke D:\risol-v1 tanpa spasi, lalu npm install, npm run dev

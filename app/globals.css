@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #FFF8E8;
+  font-family: "Plus Jakarta Sans", system-ui;
+}
+
+.serif {
+  font-family: "Instrument Serif", serif;
+}

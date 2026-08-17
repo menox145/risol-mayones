@@ -1,0 +1,1 @@
+import "./globals.css"; export const metadata={title:"Risol V1 Exact"}; export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="id"><body>{children}</body></html>}
