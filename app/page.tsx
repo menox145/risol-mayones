@@ -177,14 +177,14 @@ function BarcodeVisual({ text }: { text: string }) {
 
 export default function App() {
   const [view, setView] = useState<"customer" | "login" | "admin" | "karyawan">("customer");
-  const [outlets, setOutlets] = useLocal<Outlet[]>("risol_outlets", SEED_OUTLETS);
-  const [products, setProducts] = useLocal<Product[]>("risol_products", SEED_PRODUCTS);
+  const [outlets, setOutlets] = useState<Outlet[]>(SEED_OUTLETS);
+  const [products, setProducts] = useState<Product[]>(SEED_PRODUCTS);
   const [karyawans, setKaryawans] = useLocal<Karyawan[]>("risol_karyawan", SEED_KARYAWAN);
   const [prices, setPrices] = useLocal<OutletPrice[]>("risol_prices", SEED_PRICES);
   const [sales, setSales] = useLocal<Sale[]>("risol_sales", SEED_SALES);
   const [transaksiList, setTransaksiList] = useLocal<Transaksi[]>("transaksiList", SEED_TRANSAKSI);
   const [cart, setCart] = useLocal<CartItem[]>("risol_cart", []);
-  const [landingConfig, setLandingConfig] = useLocal<LandingConfig>("risol_landing_config", DEFAULT_LANDING);
+  const [landingConfig, setLandingConfig] = useState<LandingConfig>(DEFAULT_LANDING);
   const [selectedOutlet, setSelectedOutlet] = useLocal<string>("risol_selected_outlet", "o1");
   const [user, setUser] = useState<{ email: string, role: string, expiry?: number } | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -204,6 +204,19 @@ export default function App() {
         setUser(null);
       }
     } catch { }
+
+    // Fetch initial data from APIs
+    fetch("/api/outlets").then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setOutlets(data);
+    }).catch(console.error);
+
+    fetch("/api/products").then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setProducts(data);
+    }).catch(console.error);
+
+    fetch("/api/settings").then(r => r.json()).then(data => {
+      if (data && data.id === "landing_config") setLandingConfig(data);
+    }).catch(console.error);
   }, []);
 
   const [showCheckout, setShowCheckout] = useState(false);

@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import AdminDashboard from "@/components/AdminDashboard";
 import KaryawanDashboard from "@/components/KaryawanDashboard";
 import { LoginPage } from "@/components/LoginPage";
+import { LandingConfig, DEFAULT_LANDING } from "@/components/risol-data";
 import {
   ShoppingCart,
   MapPin,
@@ -220,6 +221,7 @@ export default function App() {
   const [transaksiList, setTransaksiList] = useLocal<Transaksi[]>("transaksiList", SEED_TRANSAKSI);
   const [cart, setCart] = useLocal<CartItem[]>("risol_cart", []);
   const [selectedOutlet, setSelectedOutlet] = useLocal<string>("risol_selected_outlet", "o1");
+  const [landingConfig, setLandingConfig] = useState<LandingConfig>(DEFAULT_LANDING);
   const [user, setUserState] = useState<{email:string, role:string}|null>(null);
 
   useEffect(() => {
@@ -663,6 +665,7 @@ export default function App() {
           sales={sales}
           prices={prices}
           transaksiList={transaksiList} setTransaksiList={setTransaksiList}
+          landingConfig={landingConfig} setLandingConfig={setLandingConfig}
         />
       )}
 

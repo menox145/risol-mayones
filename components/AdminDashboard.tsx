@@ -224,7 +224,16 @@ export default function AdminDashboard({
                     {/* Bug 4 fix: Edit button toggle aktif outlet */}
                     <button
                       title={o.aktif ? "Nonaktifkan outlet" : "Aktifkan outlet"}
-                      onClick={() => setOutlets((prev: Outlet[]) => prev.map((x) => x.id === o.id ? { ...x, aktif: !x.aktif } : x))}
+                      onClick={async () => {
+                        const res = await fetch(`/api/outlets/${o.id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ ...o, aktif: !o.aktif })
+                        });
+                        if (res.ok) {
+                          setOutlets((prev: Outlet[]) => prev.map((x) => x.id === o.id ? { ...x, aktif: !x.aktif } : x));
+                        }
+                      }}
                       className="flex h-9 w-9 items-center justify-center rounded-full border border-[#4A2C2A]/20 bg-white text-[#4A2C2A] hover:bg-[#FFF8E8]"
                     >
                       <Edit3 className="h-4 w-4" />
@@ -232,7 +241,12 @@ export default function AdminDashboard({
                     {/* Bug 4 fix: Delete button hapus outlet */}
                     <button
                       title="Hapus outlet"
-                      onClick={() => { if (confirm(`Hapus outlet "${o.nama}"?`)) setOutlets((prev: Outlet[]) => prev.filter((x) => x.id !== o.id)); }}
+                      onClick={async () => { 
+                        if (confirm(`Hapus outlet "${o.nama}"?`)) {
+                          const res = await fetch(`/api/outlets/${o.id}`, { method: "DELETE" });
+                          if (res.ok) setOutlets((prev: Outlet[]) => prev.filter((x) => x.id !== o.id));
+                        }
+                      }}
                       className="flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 hover:bg-red-100"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -276,7 +290,16 @@ export default function AdminDashboard({
                     {/* Bug 5 fix: Check button toggle aktif produk */}
                     <button
                       title={p.aktif ? "Nonaktifkan produk" : "Aktifkan produk"}
-                      onClick={() => setProducts((prev: Product[]) => prev.map((x) => x.id === p.id ? { ...x, aktif: !x.aktif } : x))}
+                      onClick={async () => {
+                        const res = await fetch(`/api/products/${p.id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ ...p, aktif: !p.aktif })
+                        });
+                        if (res.ok) {
+                          setProducts((prev: Product[]) => prev.map((x) => x.id === p.id ? { ...x, aktif: !x.aktif } : x));
+                        }
+                      }}
                       className={`flex h-9 w-9 items-center justify-center rounded-full ${p.aktif ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
                     >
                       <Check className="h-4 w-4" />
@@ -284,7 +307,12 @@ export default function AdminDashboard({
                     {/* Bug 5 fix: Trash button hapus produk */}
                     <button
                       title="Hapus produk"
-                      onClick={() => { if (confirm(`Hapus produk "${p.nama}"?`)) setProducts((prev: Product[]) => prev.filter((x) => x.id !== p.id)); }}
+                      onClick={async () => { 
+                        if (confirm(`Hapus produk "${p.nama}"?`)) {
+                          const res = await fetch(`/api/products/${p.id}`, { method: "DELETE" });
+                          if (res.ok) setProducts((prev: Product[]) => prev.filter((x) => x.id !== p.id));
+                        }
+                      }}
                       className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -411,6 +439,21 @@ export default function AdminDashboard({
                 <input value={landingConfig.heroImage} onChange={(e) => setLandingConfig({...landingConfig, heroImage: e.target.value})} className="w-full mt-1 p-2 border rounded-xl" />
                 {landingConfig.heroImage && <img src={landingConfig.heroImage} className="mt-2 w-full max-h-48 object-cover rounded-xl border" />}
               </div>
+              <div className="flex gap-4">
+                <button 
+                  onClick={async () => {
+                    const res = await fetch("/api/settings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(landingConfig)
+                    });
+                    if (res.ok) alert("Pengaturan Tampilan Berhasil Disimpan!");
+                  }}
+                  className="bg-[#FF6B35] text-white px-6 py-2 rounded-full font-bold hover:bg-[#e55e2d]"
+                >
+                  Simpan Tampilan
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -510,10 +553,21 @@ function OutletForm({ onAdd }: { onAdd: (o: Outlet) => void }) {
         <input value={alamat} onChange={(e) => setAlamat(e.target.value)} placeholder="Alamat lengkap" className="w-full rounded-full border border-[#E7DDCB] bg-[#F2EBDD] px-4 py-3 text-sm text-[#4A2C2A] outline-none placeholder:text-[#4A2C2A]/45" />
         <input value={kota} onChange={(e) => setKota(e.target.value)} placeholder="Kota" className="w-full rounded-full border border-[#E7DDCB] bg-[#F2EBDD] px-4 py-3 text-sm text-[#4A2C2A] outline-none placeholder:text-[#4A2C2A]/45" />
         <button
-          onClick={() => {
+          onClick={async () => {
             if (!nama || !alamat || !kota) return;
-            onAdd({ id: "o" + Date.now(), nama, alamat, kota, aktif: true });
-            setNama(""); setAlamat(""); setKota("");
+            const payload = { nama, alamat, kota, aktif: true };
+            const res = await fetch("/api/outlets", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+              const o = await res.json();
+              onAdd(o);
+              setNama(""); setAlamat(""); setKota("");
+            } else {
+              alert("Gagal menyimpan outlet");
+            }
           }}
           className="w-full rounded-full bg-[#4A2C2A] py-3 text-[16px] font-bold text-white shadow-sm"
         >Simpan Outlet</button>
@@ -561,11 +615,22 @@ function ProductForm({ onAdd }: { onAdd: (p: Product) => void }) {
           <img src={foto} alt="Preview foto produk" className="h-24 w-full rounded-2xl border border-[#E7DDCB] object-cover" />
         </div>
         <button
-          onClick={() => {
+          onClick={async () => {
             if (!nama) return alert("Nama wajib");
-            onAdd({ id: "p" + Date.now(), nama, deskripsi: desk || "Risol premium", harga, foto, kategori: kat, aktif: true });
-            setNama(""); setDesk(""); setHarga(10000); setKat("single");
-            setFoto("https://images.unsplash.com/photo-1604908177453-7462950a6a3b?q=80&w=600");
+            const payload = { nama, deskripsi: desk || "Risol premium", harga, foto, kategori: kat, aktif: true };
+            const res = await fetch("/api/products", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+              const p = await res.json();
+              onAdd(p);
+              setNama(""); setDesk(""); setHarga(10000); setKat("single");
+              setFoto("https://images.unsplash.com/photo-1604908177453-7462950a6a3b?q=80&w=600");
+            } else {
+              alert("Gagal menyimpan produk");
+            }
           }}
           className="w-full rounded-full bg-[#4A2C2A] py-3 text-[16px] font-bold text-white shadow-sm"
         >Simpan Produk</button>
