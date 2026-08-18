@@ -37,42 +37,6 @@ import {
   BadgeCheck,
 } from "lucide-react";
 
-// Session management dengan expiry 4 jam
-const SESSION_KEY = "risol_session_user";
-const SESSION_EXPIRY = 4 * 60 * 60 * 1000; // 4 jam dalam ms
-
-type SessionData = {
-  user: { email: string; role: string };
-  timestamp: number;
-};
-
-function getValidSession(): { email: string; role: string } | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const data: SessionData = JSON.parse(raw);
-    const now = Date.now();
-    if (now - data.timestamp > SESSION_EXPIRY) {
-      localStorage.removeItem(SESSION_KEY);
-      return null;
-    }
-    return data.user;
-  } catch {
-    return null;
-  }
-}
-
-function setSessionUser(user: { email: string; role: string } | null) {
-  if (typeof window === "undefined") return;
-  if (!user) {
-    localStorage.removeItem(SESSION_KEY);
-    return;
-  }
-  const data: SessionData = { user, timestamp: Date.now() };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
-}
-
 // Types
 type Outlet = { id: string; nama: string; alamat: string; kota: string; aktif: boolean };
 type Product = { id: string; nama: string; deskripsi: string; harga: number; foto: string; kategori: "single" | "paket"; aktif: boolean };
@@ -140,26 +104,6 @@ const SEED_SALES: Sale[] = [
 
 const SEED_TRANSAKSI: Transaksi[] = [];
 
-function useLocal<T>(key: string, def: T): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const [state, setState] = useState<T>(def);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw) {
-        setState(JSON.parse(raw));
-      }
-    } catch {}
-  }, [key]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try { window.localStorage.setItem(key, JSON.stringify(state)); } catch {}
-  }, [key, state]);
-  return [state, setState];
-}
-
 function maskWa(wa: string){
   const clean = wa.replace(/\D/g,"");
   if(clean.length <= 7) return clean;
@@ -171,20 +115,8 @@ function validateWa(wa: string){
   return clean.startsWith("08") || clean.startsWith("62") || clean.startsWith("628");
 }
 function generateNoAntrean(outletId: string){
-  if (typeof window === "undefined") {
-    return `RM-${(OUTLET_CODES[outletId] || outletId.slice(0,3).toUpperCase())}-001`;
-  }
-
-  const date = new Date().toISOString().slice(0,10);
   const code = OUTLET_CODES[outletId] || outletId.slice(0,3).toUpperCase();
-  const key = `risol_counter_${outletId}_${date}`;
-  let count = 0;
-  try {
-    const raw = window.localStorage.getItem(key);
-    count = raw ? parseInt(raw,10) : 0;
-  } catch {}
-  count += 1;
-  try { window.localStorage.setItem(key, String(count)); } catch {}
+  const count = Math.floor(Math.random() * 1000) + 1;
   const num = String(count).padStart(3,"0");
   return `RM-${code}-${num}`;
 }
@@ -213,24 +145,16 @@ function BarcodeVisual({ text }: { text: string }){
 
 export default function App() {
   const [view, setView] = useState<"customer"|"login"|"admin"|"karyawan">("customer");
-  const [outlets, setOutlets] = useLocal<Outlet[]>("risol_outlets", SEED_OUTLETS);
-  const [products, setProducts] = useLocal<Product[]>("risol_products", SEED_PRODUCTS);
-  const [karyawans, setKaryawans] = useLocal<Karyawan[]>("risol_karyawan", SEED_KARYAWAN);
-  const [prices, setPrices] = useLocal<OutletPrice[]>("risol_prices", SEED_PRICES);
-  const [sales, setSales] = useLocal<Sale[]>("risol_sales", SEED_SALES);
-  const [transaksiList, setTransaksiList] = useLocal<Transaksi[]>("transaksiList", SEED_TRANSAKSI);
-  const [cart, setCart] = useLocal<CartItem[]>("risol_cart", []);
-  const [selectedOutlet, setSelectedOutlet] = useLocal<string>("risol_selected_outlet", "o1");
+  const [outlets, setOutlets] = useState<Outlet[]>(SEED_OUTLETS);
+  const [products, setProducts] = useState<Product[]>(SEED_PRODUCTS);
+  const [karyawans, setKaryawans] = useState<Karyawan[]>(SEED_KARYAWAN);
+  const [prices, setPrices] = useState<OutletPrice[]>(SEED_PRICES);
+  const [sales, setSales] = useState<Sale[]>(SEED_SALES);
+  const [transaksiList, setTransaksiList] = useState<Transaksi[]>(SEED_TRANSAKSI);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedOutlet, setSelectedOutlet] = useState<string>("o1");
   const [landingConfig, setLandingConfig] = useState<LandingConfig>(DEFAULT_LANDING);
   const [user, setUserState] = useState<{email:string, role:string}|null>(null);
-
-  useEffect(() => {
-    const saved = getValidSession();
-    if (saved) {
-      setUserState(saved);
-      setView(saved.role === "admin" ? "admin" : "karyawan");
-    }
-  }, []);
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [showETicket, setShowETicket] = useState(false);
@@ -383,7 +307,6 @@ export default function App() {
 
     if(normalizedEmail === "admin@risol.com" && password === "admin123"){ 
       const userData = { email: normalizedEmail, role: "admin" };
-      setSessionUser(userData);
       setUserState(userData);
       setView("admin");
       return;
@@ -391,7 +314,6 @@ export default function App() {
 
     if(normalizedEmail === "karyawan@risol.com" && password === "karyawan123"){ 
       const userData = { email: normalizedEmail, role: "karyawan" };
-      setSessionUser(userData);
       setUserState(userData);
       setView("karyawan");
       return;
@@ -401,7 +323,6 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    setSessionUser(null);
     setUserState(null);
     setView("customer");
   };

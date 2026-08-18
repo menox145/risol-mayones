@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import AdminDashboard from "@/components/AdminDashboard";
 import KaryawanDashboard from "@/components/KaryawanDashboard";
@@ -104,26 +104,6 @@ const SEED_SALES: Sale[] = [
 
 const SEED_TRANSAKSI: Transaksi[] = [];
 
-function useLocal<T>(key: string, def: T): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const [state, setState] = useState<T>(def);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw) {
-        setState(JSON.parse(raw));
-      }
-    } catch { }
-  }, [key]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try { window.localStorage.setItem(key, JSON.stringify(state)); } catch { }
-  }, [key, state]);
-  return [state, setState];
-}
-
 function maskWa(wa: string) {
   const clean = wa.replace(/\D/g, "");
   if (clean.length <= 7) return clean;
@@ -135,20 +115,8 @@ function validateWa(wa: string) {
   return clean.startsWith("08") || clean.startsWith("62") || clean.startsWith("628");
 }
 function generateNoAntrean(outletId: string) {
-  if (typeof window === "undefined") {
-    return `RM-${(OUTLET_CODES[outletId] || outletId.slice(0, 3).toUpperCase())}-001`;
-  }
-
-  const date = new Date().toISOString().slice(0, 10);
   const code = OUTLET_CODES[outletId] || outletId.slice(0, 3).toUpperCase();
-  const key = `risol_counter_${outletId}_${date}`;
-  let count = 0;
-  try {
-    const raw = window.localStorage.getItem(key);
-    count = raw ? parseInt(raw, 10) : 0;
-  } catch { }
-  count += 1;
-  try { window.localStorage.setItem(key, String(count)); } catch { }
+  const count = Math.floor(Math.random() * 1000) + 1;
   const num = String(count).padStart(3, "0");
   return `RM-${code}-${num}`;
 }
@@ -179,36 +147,24 @@ export default function App() {
   const [view, setView] = useState<"customer" | "login" | "admin" | "karyawan">("customer");
   const [outlets, setOutlets] = useState<Outlet[]>(SEED_OUTLETS);
   const [products, setProducts] = useState<Product[]>(SEED_PRODUCTS);
-  const [karyawans, setKaryawans] = useLocal<Karyawan[]>("risol_karyawan", SEED_KARYAWAN);
-  const [prices, setPrices] = useLocal<OutletPrice[]>("risol_prices", SEED_PRICES);
-  const [sales, setSales] = useLocal<Sale[]>("risol_sales", SEED_SALES);
-  const [transaksiList, setTransaksiList] = useLocal<Transaksi[]>("transaksiList", SEED_TRANSAKSI);
-  const [cart, setCart] = useLocal<CartItem[]>("risol_cart", []);
+  const [karyawans, setKaryawans] = useState<Karyawan[]>(SEED_KARYAWAN);
+  const [prices, setPrices] = useState<OutletPrice[]>(SEED_PRICES);
+  const [sales, setSales] = useState<Sale[]>(SEED_SALES);
+  const [transaksiList, setTransaksiList] = useState<Transaksi[]>(SEED_TRANSAKSI);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [landingConfig, setLandingConfig] = useState<LandingConfig>(DEFAULT_LANDING);
-  const [selectedOutlet, setSelectedOutlet] = useLocal<string>("risol_selected_outlet", "o1");
-  const [user, setUser] = useState<{ email: string, role: string, expiry?: number } | null>(null);
+  const [selectedOutlet, setSelectedOutlet] = useState<string>("o1");
+  const [user, setUser] = useState<{ email: string, role: string } | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem("risol_user");
-      if (!raw) return;
-      const saved = JSON.parse(raw) as { email: string; role: string; expiry?: number } | null;
-      if (saved && saved.expiry && saved.expiry > Date.now()) {
-        setUser(saved);
-        setView(saved.role === "admin" ? "admin" : "karyawan");
-      } else {
-        window.localStorage.removeItem("risol_user");
-        document.cookie = "risol_session=; max-age=0; path=/";
-        setUser(null);
-      }
-    } catch { }
 
     // Fetch initial data from APIs
-    fetch("/api/outlets").then(r => r.json()).then(data => {
-      if (Array.isArray(data)) setOutlets(data);
-    }).catch(console.error);
+    if (typeof window !== "undefined") {
+      fetch("/api/outlets").then(r => r.json()).then(data => {
+        if (Array.isArray(data)) setOutlets(data);
+      }).catch(console.error);
+    }
 
     fetch("/api/products").then(r => r.json()).then(data => {
       if (Array.isArray(data)) setProducts(data);
@@ -349,10 +305,8 @@ export default function App() {
     else if (normalizedEmail === "karyawan@risol.com" && password === "karyawan123") role = "karyawan";
 
     if (role) {
-      const userData = { email: normalizedEmail, role, expiry: Date.now() + 4 * 60 * 60 * 1000 };
+      const userData = { email: normalizedEmail, role };
       setUser(userData);
-      window.localStorage.setItem("risol_user", JSON.stringify(userData));
-      document.cookie = `risol_session=${btoa(JSON.stringify(userData))}; max-age=${4 * 60 * 60}; path=/`;
       setShowLoginModal(false);
       setView(role as "admin" | "karyawan");
       return;
@@ -363,8 +317,6 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
-    window.localStorage.removeItem("risol_user");
-    document.cookie = "risol_session=; max-age=0; path=/";
     setView("customer");
   };
 

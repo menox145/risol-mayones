@@ -99,16 +99,8 @@ export function validateWa(wa: string) {
 }
 
 export function generateNoAntrean(outletId: string) {
-  const date = new Date().toISOString().slice(0, 10);
   const code = OUTLET_CODES[outletId] || outletId.slice(0, 3).toUpperCase();
-  const key = `risol_counter_${outletId}_${date}`;
-  let count = 0;
-  try {
-    const raw = localStorage.getItem(key);
-    count = raw ? parseInt(raw, 10) : 0;
-  } catch {}
-  count += 1;
-  try { localStorage.setItem(key, String(count)); } catch {}
+  const count = Math.floor(Math.random() * 1000) + 1;
   const num = String(count).padStart(3, "0");
   return `RM-${code}-${num}`;
 }
