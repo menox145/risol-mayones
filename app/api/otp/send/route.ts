@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 const otpCache = (global as any).otpCache || new Map<string, { otp: string; expires: number }>();
 if (process.env.NODE_ENV !== 'production') (global as any).otpCache = otpCache;
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const { phone } = await request.json();
