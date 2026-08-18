@@ -1,1 +1,1 @@
-{"version":1,"functions":{"/api/outlets":{},"/api/otp/verify":{},"/api/otp/send":{},"/api/outlets/[id]":{},"/api/products":{},"/api/settings":{},"/api/products/[id]":{}}}
+{"version":1,"functions":{"/api/otp/verify":{},"/api/outlets/[id]":{},"/api/outlets":{},"/api/otp/send":{},"/api/products":{},"/api/settings":{},"/api/products/[id]":{}}}
