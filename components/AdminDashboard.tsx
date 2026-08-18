@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BarChart3, Check, Download, Edit3, Eye, Package, Settings, ShieldCheck, Store, Ticket, Trash2, Users, X, Layout } from "lucide-react";
 
 import {
@@ -48,6 +48,24 @@ export default function AdminDashboard({
   const [filterOutletPesanan, setFilterOutletPesanan] = useState<string>("all");
   // Bug 6 fix: state untuk modal detail pesanan
   const [selectedPesanan, setSelectedPesanan] = useState<Transaksi | null>(null);
+
+  // Auto-sync landing config antar browser (polling setiap 5 detik)
+  useEffect(() => {
+    const syncInterval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.id === "landing_config") {
+            setLandingConfig(data);
+          }
+        }
+      } catch (err) {
+        console.error("Sync landing config error:", err);
+      }
+    }, 5000); // Poll setiap 5 detik
+    return () => clearInterval(syncInterval);
+  }, [setLandingConfig]);
 
   const selesaiTransaksi = transaksiList.filter((t) => t.status === "SELESAI");
   const filteredReport = selesaiTransaksi.filter((s) => {
@@ -447,7 +465,19 @@ export default function AdminDashboard({
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(landingConfig)
                     });
-                    if (res.ok) alert("Pengaturan Tampilan Berhasil Disimpan!");
+                    if (res.ok) {
+                      // Fetch ulang data terbaru dari server untuk sync ke semua browser
+                      const getRes = await fetch("/api/settings");
+                      if (getRes.ok) {
+                        const data = await getRes.json();
+                        if (data && data.id === "landing_config") {
+                          setLandingConfig(data);
+                        }
+                      }
+                      alert("Pengaturan Tampilan Berhasil Disimpan!");
+                    } else {
+                      alert("Gagal menyimpan pengaturan!");
+                    }
                   }}
                   className="bg-[#FF6B35] text-white px-6 py-2 rounded-full font-bold hover:bg-[#e55e2d]"
                 >
